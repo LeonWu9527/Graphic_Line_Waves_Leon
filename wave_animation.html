@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wave Animation</title>
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+        }
+        canvas {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="waveCanvas"></canvas>
+    <script>
+        const canvas = document.getElementById('waveCanvas');
+        const ctx = canvas.getContext('2d');
+
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+
+        let waves = [];
+
+        class Wave {
+            constructor() {
+                this.amplitude = Math.random() * 50 + 20; // 波幅
+                this.frequency = Math.random() * 0.02 + 0.01; // 頻率
+                this.speed = Math.random() * 2 + 1; // 流動速度
+                this.offset = Math.random() * 2 * Math.PI; // 偏移量
+                this.gradient = ctx.createLinearGradient(0, 0, canvas.width, 0);
+                this.gradient.addColorStop(0, `rgba(${Math.random() * 255}, ${Math.random() * 255}, ${Math.random() * 255}, 0.5)`);
+                this.gradient.addColorStop(1, `rgba(${Math.random() * 255}, ${Math.random() * 255}, ${Math.random() * 255}, 0.5)`);
+            }
+
+            draw(yOffset) {
+                ctx.beginPath();
+                const centerY = canvas.height / 2; // 計算畫布中心的 Y 座標
+                ctx.moveTo(0, centerY + yOffset);
+                for (let x = 0; x < canvas.width; x++) {
+                    const y = this.amplitude * Math.sin(this.frequency * x + this.offset) + centerY + yOffset;
+                    ctx.lineTo(x, y);
+                }
+                ctx.strokeStyle = this.gradient;
+                ctx.lineWidth = 2;
+                ctx.stroke();
+            }
+
+            update() {
+                this.offset -= this.speed * 0.02; // 波浪向左移動
+            }
+        }
+
+        class Particle {
+            constructor() {
+                this.x = Math.random() * canvas.width;
+                this.y = Math.random() * canvas.height;
+                this.radius = Math.random() * 3 + 1; // 粒子大小
+                this.alpha = Math.random(); // 初始透明度
+                this.fade = Math.random() * 0.02 + 0.01; // 閃爍速度
+            }
+
+            draw() {
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+                ctx.fillStyle = `rgba(255, 255, 255, ${this.alpha})`;
+                ctx.fill();
+            }
+
+            update() {
+                this.alpha += this.fade;
+                if (this.alpha <= 0 || this.alpha >= 1) {
+                    this.fade = -this.fade; // 反轉閃爍方向
+                }
+            }
+        }
+
+        let particles = [];
+
+        function initParticles() {
+            particles = [];
+            for (let i = 0; i < 100; i++) { // 生成 100 個粒子
+                particles.push(new Particle());
+            }
+        }
+
+        function drawParticles() {
+            particles.forEach(particle => {
+                particle.update();
+                particle.draw();
+            });
+        }
+
+        function initWaves() {
+            waves = [];
+            for (let i = 0; i < 100; i++) { // 生成 100 條波浪線
+                waves.push(new Wave());
+            }
+        }
+
+        // 修改 animate 函數，加入粒子繪製
+        function animate() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            drawParticles(); // 繪製粒子
+            waves.forEach((wave, index) => {
+                wave.update();
+                wave.draw(index * 30 - 60); // 每條波浪線的垂直偏移
+            });
+            requestAnimationFrame(animate);
+        }
+
+        window.addEventListener('resize', () => {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            initWaves();
+        });
+
+        let mouseY = canvas.height / 2;
+
+        canvas.addEventListener('mousemove', (event) => {
+            mouseY = event.clientY;
+            waves.forEach(wave => {
+                wave.amplitude = Math.abs(canvas.height / 2 - mouseY) / 10 + 20; // 根據滑鼠位置調整波幅
+            });
+        });
+
+        // 初始化粒子
+        initParticles();
+        initWaves();
+        animate();
+    </script>
+</body>
+</html>

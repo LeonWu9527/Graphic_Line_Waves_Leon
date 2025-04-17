@@ -8,6 +8,7 @@
         body {
             margin: 0;
             overflow: hidden;
+            background-color: #00008B; /* 深藍色背景 */
         }
         canvas {
             display: block;
@@ -32,21 +33,23 @@
                 this.speed = Math.random() * 2 + 1; // 流動速度
                 this.offset = Math.random() * 2 * Math.PI; // 偏移量
                 this.gradient = ctx.createLinearGradient(0, 0, canvas.width, 0);
-                this.gradient.addColorStop(0, `rgba(${Math.random() * 255}, ${Math.random() * 255}, ${Math.random() * 255}, 0.5)`);
-                this.gradient.addColorStop(1, `rgba(${Math.random() * 255}, ${Math.random() * 255}, ${Math.random() * 255}, 0.5)`);
+                this.gradient.addColorStop(0, 'rgba(255, 255, 255, 0.5)'); // 白色
+                this.gradient.addColorStop(1, 'rgba(255, 255, 0, 0.5)'); // 黃色
             }
 
             draw(yOffset) {
                 ctx.beginPath();
                 const centerY = canvas.height / 2; // 計算畫布中心的 Y 座標
-                ctx.moveTo(0, centerY + yOffset);
+                ctx.moveTo(0, yOffset); // 從畫布的上方開始繪製
                 for (let x = 0; x < canvas.width; x++) {
-                    const y = this.amplitude * Math.sin(this.frequency * x + this.offset) + centerY + yOffset;
+                    const y = this.amplitude * Math.sin(this.frequency * x + this.offset) + yOffset;
                     ctx.lineTo(x, y);
                 }
                 ctx.strokeStyle = this.gradient;
-                ctx.lineWidth = 2;
+                ctx.lineWidth = 4; // 加粗線條
+                ctx.globalAlpha = 0.6; // 使用較淡的顏色
                 ctx.stroke();
+                ctx.globalAlpha = 1.0; // 恢復透明度
             }
 
             update() {
@@ -96,8 +99,12 @@
 
         function initWaves() {
             waves = [];
-            for (let i = 0; i < 100; i++) { // 生成 100 條波浪線
-                waves.push(new Wave());
+            const waveCount = 10; // 設定波浪數量
+            const spacing = canvas.height / waveCount; // 計算每條波浪的垂直間距
+            for (let i = 0; i < waveCount; i++) {
+                const wave = new Wave();
+                wave.yOffset = i * spacing; // 設定每條波浪的垂直偏移
+                waves.push(wave);
             }
         }
 
@@ -105,9 +112,9 @@
         function animate() {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             drawParticles(); // 繪製粒子
-            waves.forEach((wave, index) => {
+            waves.forEach(wave => {
                 wave.update();
-                wave.draw(index * 30 - 60); // 每條波浪線的垂直偏移
+                wave.draw(wave.yOffset); // 使用每條波浪的垂直偏移
             });
             requestAnimationFrame(animate);
         }
